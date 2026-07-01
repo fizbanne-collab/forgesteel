@@ -1,10 +1,8 @@
-import { Alert, Button, Drawer, Flex, Segmented, Select, Space } from 'antd';
-import { FlagFilled, FlagOutlined, MoonOutlined, SettingOutlined, SunOutlined } from '@ant-design/icons';
+import { Button, Drawer, Flex, Segmented, Select, Space } from 'antd';
+import { FlagFilled, FlagOutlined, MoonOutlined, SettingOutlined, SunOutlined, TeamOutlined } from '@ant-design/icons';
 import { useDataManager, useHeroes, useOptions } from '@/contexts/data-context';
 import { AbilityData } from '@/data/ability-data';
 import { Collections } from '@/utils/collections';
-import { ConnectionSettings } from '@/models/connection-settings';
-import { ConnectionSettingsPanel } from '@/components/panels/connection-settings/connection-settings-panel';
 import { DangerButton } from '@/components/controls/danger-button/danger-button';
 import { DataService } from '@/services/data-service';
 import { Empty } from '@/components/controls/empty/empty';
@@ -17,22 +15,18 @@ import { Modal } from '@/components/modals/modal/modal';
 import { NumberSpin } from '@/components/controls/number-spin/number-spin';
 import { Options } from '@/models/options';
 import { PanelWidth } from '@/enums/panel-width';
-import { PatreonConnectPanel } from '@/components/panels/connection-settings/patreon-connect-panel';
 import { SheetPageSize } from '@/enums/sheet-page-size';
 import { StandardAbilitySelectModal } from '@/components/modals/select/standard-ability-select/standard-ability-select-modal';
 import { TextInput } from '@/components/controls/text-input/text-input';
 import { Toggle } from '@/components/controls/toggle/toggle';
 import { Utils } from '@/utils/utils';
-import { WarehouseActionsPanel } from '@/components/panels/connection-settings/warehouse-actions-panel';
 import { useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 
 import './settings-modal.scss';
 
 interface Props {
-	connectionSettings: ConnectionSettings;
 	dataService: DataService;
-	setConnectionSettings: (settings: ConnectionSettings) => void
 	onClose: () => void;
 }
 
@@ -52,16 +46,6 @@ export const SettingsModal = (props: Props) => {
 	});
 	const [ showAbilitySelector, setShowAbilitySelector ] = useState<boolean>(false);
 	const [ flag, setFlag ] = useState<string>('');
-
-	const [ connectionSettings, setConnectionSettings ] = useState<ConnectionSettings>(props.connectionSettings);
-	const [ reloadNeeded, setReloadNeeded ] = useState<boolean>(false);
-
-	const updateConnectionSettings = (value: ConnectionSettings) => {
-		const copy = Utils.copy(value);
-		setConnectionSettings(copy);
-		props.setConnectionSettings(copy);
-		setReloadNeeded(true);
-	};
 
 	const heroes = useHeroes();
 	const dataManager = useDataManager();
@@ -621,48 +605,9 @@ export const SettingsModal = (props: Props) => {
 		);
 	};
 
-	const getConnections = () => {
-		const getWarehouseConnection = () => {
-			if (FeatureFlags.hasFlag(FeatureFlags.warehouse.code)) {
-				return (
-					<ConnectionSettingsPanel
-						connectionSettings={connectionSettings}
-						setConnectionSettings={updateConnectionSettings}
-					/>
-				);
-			}
-
-			return null;
-		};
-
-		return (
-			<Expander title='Connections'>
-				<Space orientation='vertical' style={{ width: '100%' }}>
-					<PatreonConnectPanel
-						connectionSettings={connectionSettings}
-						setConnectionSettings={updateConnectionSettings}
-					/>
-					<WarehouseActionsPanel
-						connectionSettings={connectionSettings}
-					/>
-					{getWarehouseConnection()}
-					{
-						reloadNeeded ?
-							<Alert
-								title='Reload Forge Steel to use new settings'
-								type='info'
-								showIcon
-								action={
-									<Button size='small' type='primary' onClick={() => location.reload()}>
-										Reload
-									</Button>
-								}
-							/>
-							: null
-					}
-				</Space>
-			</Expander>
-		);
+	const openUserManagement = () => {
+		window.dispatchEvent(new Event('stravsteel:user-management'));
+		props.onClose();
 	};
 
 	const getFeatureFlags = () => {
@@ -722,6 +667,9 @@ export const SettingsModal = (props: Props) => {
 			case 'Settings':
 				return (
 					<Space orientation='vertical' style={{ width: '100%' }}>
+						<Button block icon={<TeamOutlined />} onClick={openUserManagement}>
+							User Management
+						</Button>
 						{getAppearance()}
 						{getHeroesGeneral()}
 						{getHeroesInteractive()}
@@ -731,7 +679,6 @@ export const SettingsModal = (props: Props) => {
 						{getEncounterRunner()}
 						{getDifficulty()}
 						{getTacticalMaps()}
-						{getConnections()}
 					</Space>
 				);
 			case 'Advanced':

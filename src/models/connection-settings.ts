@@ -1,13 +1,8 @@
-import { PatreonConnection } from '@/models/patreon-connection';
-
-export type FSDataSource = 'Local' | 'Patron' | 'Warehouse' | undefined;
+export type FSDataSource = 'Local' | 'StravSteel' | 'Warehouse' | undefined;
 
 export interface ConnectionSettings {
 	useManualWarehouse: boolean;
 	warehouseHost: string;
 	warehouseToken: string;
-	patreonConnected: boolean;
-	usePatreonWarehouse: boolean;
-	patreonConnections: PatreonConnection[];
 	dataSource: FSDataSource;
 }

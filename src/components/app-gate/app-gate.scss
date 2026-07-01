@@ -1,0 +1,17 @@
+.app-gate {
+	align-items: center;
+	background: linear-gradient(145deg, #101726, #24334f);
+	display: flex;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 24px;
+
+	.app-gate-card {
+		max-width: 520px;
+		width: 100%;
+
+		.ant-space {
+			width: 100%;
+		}
+	}
+}

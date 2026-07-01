@@ -11,8 +11,7 @@ import { Adventure } from '@/models/adventure';
 import { AdventureLogic } from '@/logic/adventure-logic';
 import { Analytics } from '@/utils/analytics';
 import { Ancestry } from '@/models/ancestry';
-import { AuthPage } from '@/components/pages/auth/auth-page';
-import { BackupPage } from '@/components/pages/backup/backup-page';
+import { CampaignManager } from '@/components/campaign-manager/campaign-manager';
 import { Career } from '@/models/career';
 import { Characteristic } from '@/enums/characteristic';
 import { ClocktowerPage } from '@/components/pages/clocktower/clocktower-page';
@@ -31,6 +30,7 @@ import { EncounterSlot } from '@/models/encounter-slot';
 import { EncounterToolsModal } from '@/components/modals/encounter-tools/encounter-tools-modal';
 import { ErrorBoundary } from '@/components/controls/error-boundary/error-boundary';
 import { ErrorsModal } from '../modals/errors/errors-modal';
+import { ExportPage } from '@/components/pages/export/export-page';
 import { FactoryLogic } from '@/logic/factory-logic';
 import { FeatureLogic } from '@/logic/feature-logic';
 import { FeatureModal } from '@/components/modals/feature/feature-modal';
@@ -90,7 +90,6 @@ import { SourcebookLogic } from '@/logic/sourcebook-logic';
 import { SourcebookType } from '@/enums/sourcebook-type';
 import { SourcebookUpdateLogic } from '@/logic/update/sourcebook-update-logic';
 import { SourcebooksModal } from '@/components/modals/sourcebooks/sourcebooks-modal';
-import { StorageServiceFactory } from '@/services/storage/storage-service-factory';
 import { SubClass } from '@/models/subclass';
 import { SummoningInfo } from '@/models/summon';
 import { TacticalMap } from '@/models/tactical-map';
@@ -100,7 +99,6 @@ import { Title } from '@/models/title';
 import { TransferPage } from '@/components/pages/transfer/transfer-page';
 import { Utils } from '@/utils/utils';
 import { WelcomePage } from '@/components/pages/welcome/welcome-page';
-import localforage from 'localforage';
 import { useErrorListener } from '@/hooks/use-error-listener';
 import { useNavigation } from '@/hooks/use-navigation';
 import { useSyncStatus } from '@/hooks/use-sync-status';
@@ -122,8 +120,8 @@ export const Main = (props: Props) => {
 	const homebrewSourcebooks = useHomebrewSourcebooks();
 	const dataManager = useDataManager();
 
-	const [ connectionSettings, setConnectionSettings ] = useState<ConnectionSettings>(props.connectionSettings);
-	const [ dataService, setDataService ] = useState<DataService>(props.dataService);
+	const connectionSettings = props.connectionSettings;
+	const dataService = props.dataService;
 
 	const [ errors, setErrors ] = useState<Event[]>([]);
 	const [ drawer, setDrawer ] = useState<ReactNode>(null);
@@ -197,27 +195,6 @@ export const Main = (props: Props) => {
 					description: Utils.getErrorMessage(err),
 					placement: 'top'
 				});
-			});
-	};
-
-	const persistConnectionSettings = (connectionSettings: ConnectionSettings) => {
-		return localforage
-			.setItem<ConnectionSettings>('forgesteel-connection-settings', connectionSettings)
-			.then(
-				setConnectionSettings,
-				err => {
-					console.error(err);
-					notify.error({
-						title: 'Error saving connection settings',
-						description: Utils.getErrorMessage(err),
-						placement: 'top'
-					});
-				}
-			).then(() => {
-				const storage = StorageServiceFactory.fromConnectionSettings(connectionSettings);
-				const ds = new DataService(storage);
-				ds.initialize();
-				setDataService(ds);
 			});
 	};
 
@@ -1433,9 +1410,7 @@ export const Main = (props: Props) => {
 	const showSettings = () => {
 		setDrawer(
 			<SettingsModal
-				connectionSettings={connectionSettings}
 				dataService={dataService}
-				setConnectionSettings={persistConnectionSettings}
 				onClose={() => setDrawer(null)}
 			/>
 		);
@@ -1769,6 +1744,7 @@ export const Main = (props: Props) => {
 
 	return (
 		<ErrorBoundary name='main'>
+			<CampaignManager />
 			<Routes>
 				<Route
 					path='/'
@@ -1944,20 +1920,7 @@ export const Main = (props: Props) => {
 							}
 						/>
 					</Route>
-					<Route
-						path='oauth-redirect'
-						element={
-							<AuthPage
-								connectionSettings={connectionSettings}
-								params={footerParams}
-								setConnectionSettings={persistConnectionSettings}
-							/>
-						}
-					/>
-					<Route
-						path='backup'
-						element={<BackupPage homebrewSourcebooks={homebrewSourcebooks} />}
-					/>
+					<Route path='export' element={<ExportPage />} />
 					<Route
 						path='transfer'
 						element={<TransferPage connectionSettings={connectionSettings} />}

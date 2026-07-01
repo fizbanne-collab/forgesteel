@@ -121,7 +121,7 @@ export const TransferPage = (props: Props) => {
 	);
 
 	const usingRemoteWarehouse = () => {
-		return props.connectionSettings.useManualWarehouse || props.connectionSettings.usePatreonWarehouse;
+		return props.connectionSettings.useManualWarehouse;
 	};
 
 	const getHeroSection = (heroes: Hero[]) => {

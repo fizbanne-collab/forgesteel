@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 
 // Base manifest template
 const BASE_MANIFEST = {
-	name: 'Forge Steel',
-	short_name: 'Forge Steel',
+	name: 'StravSteel',
+	short_name: 'StravSteel',
 	description: 'Heroes, monsters, encounters ... everything you need for Draw Steel.',
 	start_url: '/',
 	display: 'standalone',
@@ -131,6 +131,13 @@ export default defineConfig({
 		tsconfigPaths: true
 	},
 	server: {
+		proxy: {
+			'/api': {
+				target: 'http://localhost:3001',
+				changeOrigin: true,
+				ws: true
+			}
+		},
 		headers: {
 			'Service-Worker-Allowed': '/'
 		}

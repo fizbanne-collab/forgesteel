@@ -4,7 +4,6 @@ import { blacksmith } from '@/data/sourcebooks/third-party/magazine-blacksmith';
 import { core } from '@/data/sourcebooks/official/core';
 import { lookOut } from '@/data/sourcebooks/third-party/look-out';
 import { orden } from '@/data/sourcebooks/official/orden';
-import { patreon } from '@/data/sourcebooks/official/patreon';
 import { ratcatcher } from '@/data/sourcebooks/third-party/magazine-ratcatcher';
 import { steelEchoes } from '@/data/sourcebooks/third-party/steel-echoes';
 import { summonerSourcebook } from '@/data/sourcebooks/official/summoner';
@@ -15,7 +14,6 @@ export class SourcebookData {
 	// Official
 	static core = core;
 	static orden = orden;
-	static patreon = patreon;
 	static beastheart = beastheartSourcebook;
 	static summoner = summonerSourcebook;
 

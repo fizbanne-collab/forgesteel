@@ -55,10 +55,6 @@ export class SourcebookLogic {
 			SourcebookData.weaponsOfLegend
 		];
 
-		if (FeatureFlags.hasFlag(FeatureFlags.playtest.code)) {
-			list.push(SourcebookData.patreon);
-		}
-
 		if (FeatureFlags.hasFlag(FeatureFlags.communityPreRelease.code)) {
 			list.push(SourcebookData.communityPrerelease);
 		}

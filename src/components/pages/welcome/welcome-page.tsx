@@ -51,7 +51,7 @@ export const WelcomePage = (props: Props) => {
 				<Button block={true} type='text' onClick={() => navigation.goToLibrary('ancestry')}>Library</Button>
 				<Button block={true} type='text' onClick={() => navigation.goToSession()}>Session</Button>
 				<Divider size='small' />
-				<Button block={true} type='text' onClick={() => navigation.goToBackup()}>Backup</Button>
+				<Button block={true} type='text' onClick={() => navigation.goToExport()}>Export Data</Button>
 				<Button block={true} type='text' onClick={() => navigation.goToClocktower()}>Clocktower</Button>
 			</Space>
 		)

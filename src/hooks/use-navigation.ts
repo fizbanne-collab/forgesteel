@@ -45,8 +45,8 @@ export const useNavigation = () => {
 		goToTransfer: () => {
 			return navigate('/transfer');
 		},
-		goToBackup: () => {
-			return navigate('/backup');
+		goToExport: () => {
+			return navigate('/export');
 		},
 		goToClocktower: () => {
 			return navigate('/clocktower');

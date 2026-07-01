@@ -109,14 +109,6 @@ export const ConnectionSettingsPanel = (props: Props) => {
 
 	return (
 		<Space orientation='vertical' style={{ width: '100%' }}>
-			{
-				connectionSettings.usePatreonWarehouse &&
-					<Alert
-						type='warning'
-						title="You are a patron with automatic access to the Patron Warehouse - you don't need to manually connect to anything!"
-						showIcon={true}
-					/>
-			}
 			<Toggle
 				label='Manually connect with Forge Steel Warehouse'
 				value={connectionSettings.useManualWarehouse}

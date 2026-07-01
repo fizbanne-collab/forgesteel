@@ -6,4 +6,10 @@ node_modules
 .vscode/*
 .env
 .env.local
+server/.env
+server/.env.local
+storage/
+backups/
+.api-dev.*.log
+.web-dev.*.log
 /.vs

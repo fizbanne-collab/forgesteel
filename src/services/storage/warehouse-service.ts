@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-import { Config } from '@/utils/config';
 import { ConnectionSettings } from '@/models/connection-settings';
 import { Hero } from '@/models/hero';
 import { Session } from '@/models/session';
@@ -11,22 +10,14 @@ export class WarehouseService implements StorageService {
 	readonly host: string;
 	readonly apiToken: string;
 
-	private useNewAuth: boolean;
 	private jwt: string | null;
 	private refreshToken: string | null;
 
 	private api: AxiosInstance;
 
 	constructor(settings: ConnectionSettings) {
-		if (settings.usePatreonWarehouse) {
-			this.host = Config.getPatreonWarehouseHost();
-			this.apiToken = '';
-			this.useNewAuth = true;
-		} else {
-			this.host = settings.warehouseHost;
-			this.apiToken = settings.warehouseToken;
-			this.useNewAuth = false;
-		}
+		this.host = settings.warehouseHost;
+		this.apiToken = settings.warehouseToken;
 
 		this.jwt = null;
 		this.refreshToken = null;
@@ -78,12 +69,10 @@ export class WarehouseService implements StorageService {
 
 	async initialize(): Promise<boolean> {
 		this.api.interceptors.request.use(async config => {
-			if (!this.useNewAuth) {
-				if (this.jwt === null) {
-					await this.ensureAuth();
-				}
-				config.headers.Authorization = `Bearer ${this.jwt}`;
+			if (this.jwt === null) {
+				await this.ensureAuth();
 			}
+			config.headers.Authorization = `Bearer ${this.jwt}`;
 			return config;
 		});
 
@@ -109,9 +98,7 @@ export class WarehouseService implements StorageService {
 	}
 
 	private async ensureAuth() {
-		if (!this.useNewAuth) {
-			await this.ensureJwt();
-		}
+		await this.ensureJwt();
 		return true;
 	};
 

@@ -1,0 +1,12 @@
+.export-page {
+	align-items: center;
+	display: flex;
+	height: 100%;
+	justify-content: center;
+	padding: 40px;
+
+	.export-page-card {
+		max-width: 640px;
+		width: 100%;
+	}
+}

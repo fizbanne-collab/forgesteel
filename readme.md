@@ -1,3 +1,21 @@
+# StravSteel
+
+StravSteel is a campaign-focused, web-hosted fork of Forge Steel. It is being
+extended with invite-only Google authentication, server-side storage,
+real-time character collaboration, campaign sharing, portraits, and handouts.
+
+The project is currently in its foundation phase. See:
+
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
+- [Local and Unraid operations](docs/operations.md)
+- [Upstream integration](docs/upstream.md)
+
+## Forge Steel upstream
+
+StravSteel retains Forge Steel's core tools and GPLv3 license while maintaining
+the original project as an upstream Git remote.
+
 # Forge Steel
 
 **FORGE STEEL** is a hero builder app for **DRAW STEEL**, designed by [Andy Aiken](mailto:andy.aiken@live.co.uk).

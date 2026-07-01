@@ -13,17 +13,5 @@ export class ConnectionSettingsUpdateLogic {
 		if (settings.warehouseToken === undefined) {
 			settings.warehouseToken = '';
 		}
-
-		if (settings.patreonConnected === undefined) {
-			settings.patreonConnected = false;
-		}
-
-		if (settings.usePatreonWarehouse === undefined) {
-			settings.usePatreonWarehouse = false;
-		}
-
-		if (settings.patreonConnections === undefined) {
-			settings.patreonConnections = [];
-		}
 	};
 }
