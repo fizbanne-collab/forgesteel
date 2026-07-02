@@ -1,9 +1,12 @@
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import websocket from '@fastify/websocket';
 import Fastify from 'fastify';
 import { registerAuth } from './auth.js';
 import { registerCampaigns } from './campaigns.js';
 import { registerStorage } from './storage.js';
+import { RealtimeHub, registerRealtime } from './realtime.js';
+import { registerFiles } from './files.js';
 import { AppConfig } from './config.js';
 import { DatabasePool } from './db.js';
 
@@ -14,10 +17,17 @@ interface AppDependencies {
 
 export const buildApp = async ({ config, database }: AppDependencies) => {
 	const app = Fastify({
+		bodyLimit: 2 * 1024 * 1024,
 		logger: config.NODE_ENV !== 'test',
 		trustProxy: true
 	});
 
+	await app.register(rateLimit, {
+		global: true,
+		max: config.RATE_LIMIT_MAX,
+		timeWindow: config.RATE_LIMIT_WINDOW,
+		allowList: request => request.url === '/api/health'
+	});
 	await app.register(cors, {
 		origin: config.WEB_ORIGIN,
 		credentials: true
@@ -25,7 +35,10 @@ export const buildApp = async ({ config, database }: AppDependencies) => {
 	await app.register(websocket);
 	await registerAuth(app, config, database);
 	registerCampaigns(app, config, database);
-	registerStorage(app, database);
+	const realtime = new RealtimeHub();
+	registerRealtime(app, database, realtime);
+	registerStorage(app, database, realtime);
+	await registerFiles(app, config, database);
 
 	app.get('/api/health', async (_request, reply) => {
 		try {
@@ -41,19 +54,6 @@ export const buildApp = async ({ config, database }: AppDependencies) => {
 				service: 'stravsteel-api'
 			});
 		}
-	});
-
-	app.get('/api/realtime', { websocket: true }, socket => {
-		socket.send(JSON.stringify({
-			type: 'connected',
-			message: 'Authentication and character rooms will be added in the next phase.'
-		}));
-
-		socket.on('message', (message: Buffer) => {
-			if (message.toString() === 'ping') {
-				socket.send('pong');
-			}
-		});
 	});
 
 	app.addHook('onClose', async () => {

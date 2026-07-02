@@ -28,20 +28,25 @@
 
 ## Phase 4: Real-time characters
 
-- Add character WebSocket rooms and presence.
-- Apply revisioned field-level patches with conflict detection.
-- Broadcast accepted updates.
-- Display the five-entry edit history and support restoration.
+- [x] Add authenticated campaign WebSocket rooms.
+- [x] Apply revisioned field-level patches with conflict detection.
+- [x] Merge non-overlapping concurrent changes and reject overlapping edits.
+- [x] Broadcast accepted updates to open campaign clients.
+- [x] Display the five-entry edit history and support restoration.
+- [x] Add presence indicators showing who currently has a character open.
 
 ## Phase 5: Sharing and files
 
-- Add character portraits and campaign handouts.
-- Enforce campaign-scoped download authorization.
-- Add file size/type limits and image processing.
+- [x] Add character portraits and campaign handouts.
+- [x] Enforce campaign-scoped download authorization.
+- [x] Add file size and type limits.
+- [ ] Add portrait image processing and thumbnail generation.
 
 ## Phase 6: Unraid readiness
 
-- Exercise backup and restoration procedures.
-- Add production hardening, rate limits, structured logs, and monitoring.
-- Document reverse proxy, Google callback, volumes, secrets, and upgrades.
-- Run desktop and tablet acceptance testing.
+- [x] Exercise backup restoration using a generated scheduled-format backup.
+- [x] Add production hardening, rate limits, structured logs, and health
+  monitoring guidance.
+- [x] Document reverse proxy, Google callback, volumes, secrets, and upgrades.
+- [x] Run desktop and tablet acceptance testing against the production
+  container.

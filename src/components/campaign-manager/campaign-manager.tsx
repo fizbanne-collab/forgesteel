@@ -1,5 +1,5 @@
-import { Alert, Avatar, Button, Card, Divider, Form, Input, Modal, Popconfirm, Select, Space, Tag, Typography } from 'antd';
-import { CopyOutlined, LogoutOutlined, UserAddOutlined } from '@ant-design/icons';
+import { Alert, Avatar, Button, Card, Divider, Form, Input, Modal, Popconfirm, Select, Space, Tag, Typography, Upload } from 'antd';
+import { CopyOutlined, DeleteOutlined, DownloadOutlined, LogoutOutlined, PaperClipOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 
 import './campaign-manager.scss';
@@ -32,6 +32,15 @@ interface InvitationValues {
 	role: 'director' | 'player';
 }
 
+interface Handout {
+	id: string;
+	name: string;
+	contentType: string;
+	byteSize: number;
+	createdAt: string;
+	url: string;
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(url, {
 		credentials: 'include',
@@ -53,6 +62,8 @@ export const CampaignManager = () => {
 	const [ session, setSession ] = useState<UserSession>();
 	const [ campaigns, setCampaigns ] = useState<Campaign[]>([]);
 	const [ members, setMembers ] = useState<CampaignMember[]>([]);
+	const [ handouts, setHandouts ] = useState<Handout[]>([]);
+	const [ uploadingHandout, setUploadingHandout ] = useState(false);
 	const [ inviteMode, setInviteMode ] = useState<'email' | 'link'>('link');
 	const [ inviteUrl, setInviteUrl ] = useState<string>();
 	const [ notice, setNotice ] = useState<{ type: 'success' | 'error'; text: string }>();
@@ -68,6 +79,15 @@ export const CampaignManager = () => {
 			return;
 		}
 		setMembers(await request<CampaignMember[]>(`/api/campaigns/${activeCampaignID}/members`));
+	};
+
+	const loadHandouts = async () => {
+		if (!activeCampaignID) {
+			return;
+		}
+		setHandouts(await request<Handout[]>('/api/files/handouts', {
+			headers: { 'x-stravsteel-campaign-id': activeCampaignID }
+		}));
 	};
 
 	useEffect(() => {
@@ -88,7 +108,7 @@ export const CampaignManager = () => {
 
 	useEffect(() => {
 		if (open) {
-			void loadMembers().catch(reason => {
+			void Promise.all([ loadMembers(), loadHandouts() ]).catch(reason => {
 				setNotice({ type: 'error', text: reason instanceof Error ? reason.message : 'Unable to load campaign members.' });
 			});
 		}
@@ -173,6 +193,44 @@ export const CampaignManager = () => {
 		}
 	};
 
+	const uploadHandout = async (file: File) => {
+		if (!activeCampaignID) {
+			return;
+		}
+		const form = new FormData();
+		form.append('file', file);
+		setUploadingHandout(true);
+		setNotice(undefined);
+		try {
+			const response = await fetch('/api/files/handouts', {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'x-stravsteel-campaign-id': activeCampaignID },
+				body: form
+			});
+			const body = await response.json() as { error?: string };
+			if (!response.ok) {
+				throw new Error(body.error ?? `${response.status} ${response.statusText}`);
+			}
+			await loadHandouts();
+			setNotice({ type: 'success', text: `${file.name} was uploaded.` });
+		} catch (reason) {
+			setNotice({ type: 'error', text: reason instanceof Error ? reason.message : 'Unable to upload handout.' });
+		} finally {
+			setUploadingHandout(false);
+		}
+	};
+
+	const deleteHandout = async (handout: Handout) => {
+		try {
+			await request(`/api/files/${handout.id}`, { method: 'DELETE' });
+			await loadHandouts();
+			setNotice({ type: 'success', text: `${handout.name} was deleted.` });
+		} catch (reason) {
+			setNotice({ type: 'error', text: reason instanceof Error ? reason.message : 'Unable to delete handout.' });
+		}
+	};
+
 	return (
 		<>
 			<Modal
@@ -245,6 +303,49 @@ export const CampaignManager = () => {
 								</div>
 							))}
 						</div>
+					</Card>
+
+					<Card size='small' title={<Space><PaperClipOutlined />Campaign Handouts</Space>}>
+						<Space orientation='vertical' style={{ width: '100%' }}>
+							{canManage
+								? (
+									<Upload
+										showUploadList={false}
+										beforeUpload={file => {
+											void uploadHandout(file);
+											return false;
+										}}
+									>
+										<Button loading={uploadingHandout}>Upload Handout</Button>
+									</Upload>
+								)
+								: null}
+							{handouts.map(handout => (
+								<div className='campaign-manager-member' key={handout.id}>
+									<div>
+										<Typography.Text strong>{handout.name}</Typography.Text>
+										<br />
+										<Typography.Text type='secondary'>
+											{(handout.byteSize / 1024).toFixed(1)} KB
+										</Typography.Text>
+									</div>
+									<Space>
+										<Button icon={<DownloadOutlined />} href={handout.url}>Download</Button>
+										{canManage
+											? (
+												<Popconfirm
+													title={`Delete ${handout.name}?`}
+													onConfirm={() => deleteHandout(handout)}
+												>
+													<Button danger icon={<DeleteOutlined />} />
+												</Popconfirm>
+											)
+											: null}
+									</Space>
+								</div>
+							))}
+							{handouts.length === 0 ? <Typography.Text type='secondary'>No handouts yet.</Typography.Text> : null}
+						</Space>
 					</Card>
 
 					{canManage

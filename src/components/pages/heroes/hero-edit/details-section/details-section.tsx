@@ -14,8 +14,8 @@ import { NameSuggestions } from '@/components/panels/name-suggestions/name-sugge
 import { SelectablePanel } from '@/components/controls/selectable-panel/selectable-panel';
 import { Sourcebook } from '@/models/sourcebook';
 import { TextInput } from '@/components/controls/text-input/text-input';
-import { Utils } from '@/utils/utils';
 import { useHeroes } from '@/contexts/data-context';
+import { useState } from 'react';
 
 import './details-section.scss';
 
@@ -29,11 +29,49 @@ interface DetailsSectionProps {
 }
 
 export const DetailsSection = (props: DetailsSectionProps) => {
+	const [ portraitError, setPortraitError ] = useState<string>();
+	const [ uploadingPortrait, setUploadingPortrait ] = useState(false);
 	const allHeroes = useHeroes();
 	const folders = allHeroes
 		.map(h => h.folder)
 		.filter(f => !!f)
 		.sort();
+
+	const uploadPortrait = async (file: File) => {
+		const campaignID = localStorage.getItem('stravsteel-active-campaign') ?? '';
+		const form = new FormData();
+		form.append('file', file);
+		setUploadingPortrait(true);
+		setPortraitError(undefined);
+		try {
+			const response = await fetch(`/api/files/portraits/${encodeURIComponent(props.hero.id)}`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'x-stravsteel-campaign-id': campaignID },
+				body: form
+			});
+			const result = await response.json() as { error?: string; url?: string };
+			if (!response.ok || !result.url) {
+				throw new Error(result.error ?? `${response.status} ${response.statusText}`);
+			}
+			props.setPicture(`${result.url}?v=${Date.now()}`);
+		} catch (reason) {
+			setPortraitError(reason instanceof Error ? reason.message : 'Unable to upload portrait.');
+		} finally {
+			setUploadingPortrait(false);
+		}
+	};
+
+	const clearPortrait = async () => {
+		const match = props.hero.picture?.match(/^\/api\/files\/([^?]+)/);
+		if (match) {
+			await fetch(`/api/files/${encodeURIComponent(match[1])}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+		}
+		props.setPicture(null);
+	};
 
 	return (
 		<div className='hero-edit-content details-section'>
@@ -57,32 +95,25 @@ export const DetailsSection = (props: DetailsSectionProps) => {
 						props.hero.picture ?
 							<Flex align='center' justify='center' gap={10}>
 								<img className='portrait-edit' src={props.hero.picture} title='Portrait' />
-								<DangerButton mode='clear' onConfirm={() => props.setPicture(null)} />
+								<DangerButton mode='clear' onConfirm={clearPortrait} />
 							</Flex>
 							:
 							<Upload
 								style={{ width: '100%' }}
-								accept='.png,.webp,.gif,.jpg,.jpeg,.svg'
+								accept='.png,.webp,.gif,.jpg,.jpeg'
 								showUploadList={false}
-								beforeUpload={async file => {
-									const reader = new FileReader();
-									reader.onload = async progress => {
-										if (progress.target) {
-											const content = progress.target.result as string;
-											const resized = await Utils.getResizedImage(content);
-											props.setPicture(resized);
-										}
-									};
-									reader.readAsDataURL(file);
+								beforeUpload={file => {
+									void uploadPortrait(file);
 									return false;
 								}}
 							>
-								<Button>
+								<Button loading={uploadingPortrait}>
 									<DownloadOutlined />
 									Choose a picture
 								</Button>
 							</Upload>
 					}
+					{portraitError ? <Alert type='error' showIcon title={portraitError} /> : null}
 				</SelectablePanel>
 				<SelectablePanel>
 					<HeaderText>Folder</HeaderText>

@@ -1,12 +1,13 @@
-import { Alert, Button, Divider } from 'antd';
+import { Alert, Button, Divider, Tag, Tooltip } from 'antd';
 import { AppFooter, FooterParams } from '@/components/panels/app-footer/app-footer';
-import { CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, UploadOutlined } from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
 import { Ability } from '@/models/ability';
 import { Ancestry } from '@/models/ancestry';
 import { AppHeader } from '@/components/panels/app-header/app-header';
 import { ButtonGroup } from '@/components/controls/button-group/button-group';
 import { Career } from '@/models/career';
+import { CharacterHistoryModal } from '@/components/modals/character-history/character-history-modal';
 import { Characteristic } from '@/enums/characteristic';
 import { Complication } from '@/models/complication';
 import { Culture } from '@/models/culture';
@@ -71,17 +72,38 @@ interface Props {
 	onSelectControlledSquad: (hero: Hero, slot: EncounterSlot) => void;
 }
 
+interface PresenceViewer {
+	id: string;
+	displayName: string;
+	avatarUrl: string | null;
+}
+
 export const HeroViewPage = (props: Props) => {
 	const isSmall = useIsSmall();
 	const navigation = useNavigation();
 	const { heroID } = useParams<{ heroID: string }>();
 	const [ view, setView ] = useState<string>('modern');
+	const [ showHistory, setShowHistory ] = useState(false);
+	const [ viewers, setViewers ] = useState<PresenceViewer[]>([]);
 	const heroes = useHeroes();
 	const hero = useMemo(
 		() => heroes.find(h => h.id === heroID)!,
 		[ heroID, heroes ]
 	);
 	useTitle(hero.name || 'Unnamed Hero');
+
+	useEffect(() => {
+		const receivePresence = (event: Event) => {
+			const characters = (event as CustomEvent<Record<string, PresenceViewer[]>>).detail;
+			setViewers(characters[heroID!] ?? []);
+		};
+		window.addEventListener('stravsteel:presence-updated', receivePresence);
+		window.dispatchEvent(new CustomEvent('stravsteel:presence-viewing', { detail: heroID }));
+		return () => {
+			window.removeEventListener('stravsteel:presence-updated', receivePresence);
+			window.dispatchEvent(new CustomEvent('stravsteel:presence-viewing', { detail: null }));
+		};
+	}, [ heroID ]);
 
 	const getContent = () => {
 		switch (view) {
@@ -144,6 +166,17 @@ export const HeroViewPage = (props: Props) => {
 						buttons={[
 							{ type: 'button', label: isSmall ? undefined : 'Edit', icon: <EditOutlined />, onClick: () => navigation.goToHeroEdit(heroID!, 'details') },
 							{ type: 'button', label: isSmall ? undefined : 'Copy', icon: <CopyOutlined />, onClick: () => props.copyHero(hero) },
+							{ type: 'button', label: isSmall ? undefined : 'History', icon: <HistoryOutlined />, onClick: () => setShowHistory(true) },
+							{
+								type: 'control',
+								control: viewers.length > 0
+									? (
+										<Tooltip title={viewers.map(viewer => viewer.displayName).join(', ')}>
+											<Tag color='blue'>{viewers.length} viewing</Tag>
+										</Tooltip>
+									)
+									: null
+							},
 							{
 								type: 'dropdown',
 								label: isSmall ? undefined : 'Export',
@@ -193,6 +226,7 @@ export const HeroViewPage = (props: Props) => {
 					page='heroes'
 					params={props.params}
 				/>
+				<CharacterHistoryModal hero={hero} open={showHistory} onClose={() => setShowHistory(false)} />
 			</div>
 		</ErrorBoundary>
 	);

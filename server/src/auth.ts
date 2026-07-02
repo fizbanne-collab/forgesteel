@@ -51,7 +51,7 @@ const decodeState = (value: string): OAuthState => {
 	return JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as OAuthState;
 };
 
-const findSessionUser = async (
+export const getSessionUser = async (
 	request: FastifyRequest,
 	database: DatabasePool
 ): Promise<AuthenticatedUser | null> => {
@@ -92,7 +92,7 @@ export const requireUser = async (
 	reply: FastifyReply,
 	database: DatabasePool
 ) => {
-	const user = await findSessionUser(request, database);
+	const user = await getSessionUser(request, database);
 	if (!user) {
 		await reply.code(401).send({ error: 'Authentication required' });
 		return null;
@@ -302,7 +302,7 @@ export const registerAuth = async (
 	});
 
 	app.get('/api/auth/session', async (request, reply) => {
-		const user = await findSessionUser(request, database);
+		const user = await getSessionUser(request, database);
 		return user ?? reply.code(401).send({ error: 'Authentication required' });
 	});
 

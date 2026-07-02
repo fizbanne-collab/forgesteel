@@ -1,4 +1,4 @@
-import { ActionDispatch, PropsWithChildren, createContext, useContext, useReducer } from 'react';
+import { ActionDispatch, PropsWithChildren, createContext, useContext, useEffect, useReducer } from 'react';
 import { Analytics } from '@/utils/analytics';
 import { Collections } from '@/utils/collections';
 import { DataService } from '@/services/data-service';
@@ -138,6 +138,18 @@ export function DataManagerProvider(props: PropsWithChildren<DataManagerProps>) 
 	const [ hiddenSourcebookIDs, hiddenSourcebookIDsDispatch ] = useReducer(UpdateOnlyReducer<string[]>, props.initialHiddenSourcebookIDs);
 	const [ heroes, heroDispatch ] = useReducer(HeroesReducer, props.initialHeroes);
 	const [ sourcebooks, sourcebookDispatch ] = useReducer(SourcebooksReducer, props.initialHomebrewSourcebooks);
+
+	useEffect(() => {
+		const receiveHeroUpdate = (event: Event) => {
+			const hero = (event as CustomEvent<Hero>).detail;
+			heroDispatch({
+				type: ReducerActionKind.UPDATE,
+				payload: hero
+			});
+		};
+		window.addEventListener('stravsteel:hero-updated', receiveHeroUpdate);
+		return () => window.removeEventListener('stravsteel:hero-updated', receiveHeroUpdate);
+	}, []);
 
 	const dataManager = new DataManager(dataService, {
 		options: optionsDispatch,

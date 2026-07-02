@@ -3,6 +3,7 @@ name: stravsteel
 services:
   database:
     image: postgres:17-alpine
+    init: true
     restart: unless-stopped
     environment:
       POSTGRES_DB: stravsteel
@@ -17,12 +18,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     build:
       context: .
       dockerfile: server/Dockerfile
     restart: unless-stopped
+    init: true
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
@@ -36,6 +42,8 @@ services:
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:8080/api/auth/google/callback}
       INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:?Set INITIAL_ADMIN_EMAIL in .env}
       UPLOAD_DIRECTORY: /data/uploads
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-300}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-1 minute}
     volumes:
       - uploads:/data/uploads
     depends_on:
@@ -46,21 +54,35 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    init: true
     ports:
       - "${WEB_PORT:-8080}:80"
     depends_on:
       api:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backup:
     image: prodrigestivill/postgres-backup-local:17
     restart: unless-stopped
+    init: true
     environment:
       POSTGRES_HOST: database
       POSTGRES_DB: stravsteel
@@ -75,6 +97,12 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   database-data:

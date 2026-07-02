@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/sh
+set -eu
 
 APP_PREFIX="FORGESTEEL_"
 ASSET_DIR=/usr/share/nginx/html
@@ -11,9 +12,8 @@ ASSET_DIR=/usr/share/nginx/html
 
 # Check if the directory exists
 if [ ! -d "$ASSET_DIR" ]; then
-    # If not, display a warning message and skip to the next iteration
     echo "Warning: directory '$ASSET_DIR' not found, skipping."
-    continue
+    exit 0
 fi
 
 # Display the current directory being scanned
@@ -22,7 +22,7 @@ echo "Scanning directory: $ASSET_DIR"
 # Iterate through each environment variable that starts with APP_PREFIX
 env | grep "^${APP_PREFIX}" | while IFS='=' read -r key value; do
     # Display the variable being replaced
-    echo "  • Replacing ${key} → ${value}"
+    echo "  Replacing ${key}"
 
     # Use find and sed to replace the variable in all files within the directory
     find "$ASSET_DIR" -type f \

@@ -1,0 +1,18 @@
+services:
+  database:
+    volumes:
+      - type: bind
+        source: ${APPDATA_PATH:-/mnt/user/appdata/stravsteel}/postgres
+        target: /var/lib/postgresql/data
+
+  api:
+    volumes:
+      - type: bind
+        source: ${APPDATA_PATH:-/mnt/user/appdata/stravsteel}/uploads
+        target: /data/uploads
+
+  backup:
+    volumes:
+      - type: bind
+        source: ${BACKUP_PATH:-/mnt/user/backups/stravsteel}
+        target: /backups

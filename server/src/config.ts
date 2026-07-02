@@ -13,7 +13,9 @@ const configSchema = z.object({
 	GOOGLE_CLIENT_SECRET: z.string().default(''),
 	GOOGLE_CALLBACK_URL: z.string().url().default('http://localhost:3001/api/auth/google/callback'),
 	INITIAL_ADMIN_EMAIL: z.string().email().or(z.literal('')).default(''),
-	UPLOAD_DIRECTORY: z.string().default('./storage/uploads')
+	UPLOAD_DIRECTORY: z.string().default('./storage/uploads'),
+	RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+	RATE_LIMIT_WINDOW: z.string().min(1).default('1 minute')
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
