@@ -8,7 +8,7 @@ node_modules
 .env.local
 server/.env
 server/.env.local
-storage/
+/storage/
 backups/
 .api-dev.*.log
 .web-dev.*.log
