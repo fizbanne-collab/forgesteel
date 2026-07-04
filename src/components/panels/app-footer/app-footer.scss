@@ -7,41 +7,44 @@
 	justify-content: space-between;
 	gap: 15px;
 
-	.logo-icon {
-		height: 18px;
-		margin-bottom: -1px;
-	}
-
-	.navigation-buttons-panel {
-		border-radius: 8px;
-		background-color: rgb(245, 245, 245);
-		padding: 2px;
-
-		.ant-btn-text {
-			&.selected {
-				background-color: rgba(0, 0, 0, 0.04);
-				font-weight: 600;
-			}
-		}
-
-		.ant-divider-vertical {
-			margin-inline: 1px;
-		}
-	}
-
 	.danger {
 		color: red !important;
+	}
+}
+
+.navigation-buttons-panel {
+	border-radius: 8px;
+	background-color: rgb(245, 245, 245);
+	padding: 2px;
+
+	.ant-btn-text {
+		&.selected {
+			background-color: rgba(0, 0, 0, 0.04);
+			font-weight: 600;
+		}
+	}
+
+	.ant-divider-vertical {
+		margin-inline: 1px;
+	}
+}
+
+.app-menu-popover {
+	min-width: 150px;
+
+	.ant-btn {
+		justify-content: flex-start;
 	}
 }
 
 html[data-theme="dark"] {
 	.app-footer {
 		background-color: rgb(0, 0, 0);
+	}
 
-		.navigation-buttons-panel {
-			.ant-btn-text {
-				color: rgba(0, 0, 0, 0.88);
-			}
+	.navigation-buttons-panel {
+		.ant-btn-text {
+			color: rgba(0, 0, 0, 0.88) !important;
 		}
 	}
 }

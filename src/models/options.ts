@@ -5,6 +5,7 @@ export interface Options {
 	// App
 	cookieConsent: boolean;
 	showDataSource: boolean;
+	navigationBarAtBottom: boolean;
 	// Hero
 	shownStandardAbilities: string[];
 	xpPerLevel: number;

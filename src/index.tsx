@@ -1,4 +1,4 @@
-import { AppGate } from '@/components/app-gate/app-gate';
+import { AppGate, UserSession } from '@/components/app-gate/app-gate';
 import { DataLoader } from '@/components/panels/data-loader/data-loader';
 import { DataManagerProvider } from './contexts/data-context';
 import { ErrorBoundary } from '@/components/controls/error-boundary/error-boundary';
@@ -34,7 +34,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 const root = createRoot(document.getElementById('root')!);
 
-const renderApplication = () => {
+const renderApplication = (userSession: UserSession) => {
 	root.render(
 		<ErrorBoundary>
 			<StrictMode>
@@ -55,6 +55,7 @@ const renderApplication = () => {
 											<Main
 												connectionSettings={data.connectionSettings}
 												dataService={data.service}
+												userSession={userSession}
 											/>
 										</DataManagerProvider>
 									</HashRouter>

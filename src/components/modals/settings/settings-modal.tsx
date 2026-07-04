@@ -61,6 +61,13 @@ export const SettingsModal = (props: Props) => {
 			saveOptions(copy);
 		};
 
+		const setNavigationBarAtBottom = (value: boolean) => {
+			const copy = Utils.copy(options);
+			copy.navigationBarAtBottom = value;
+			setOptions(copy);
+			saveOptions(copy);
+		};
+
 		return (
 			<Expander title='Appearance'>
 				<Space orientation='vertical' style={{ width: '100%' }}>
@@ -73,6 +80,11 @@ export const SettingsModal = (props: Props) => {
 							{ label: 'System', value: 'system', icon: <SettingOutlined /> },
 							{ label: 'Dark Mode', value: 'dark', icon: <MoonOutlined /> }
 						]}
+					/>
+					<Toggle
+						label='Navigation bar at bottom'
+						value={options.navigationBarAtBottom}
+						onChange={setNavigationBarAtBottom}
 					/>
 					<Toggle label='Show data source' value={options.showDataSource} onChange={setShowDataSource} />
 				</Space>

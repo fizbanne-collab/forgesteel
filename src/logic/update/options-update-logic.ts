@@ -12,6 +12,10 @@ export class OptionsUpdateLogic {
 			options.showDataSource = false;
 		}
 
+		if (options.navigationBarAtBottom === undefined) {
+			options.navigationBarAtBottom = false;
+		}
+
 		if (options.xpPerLevel === undefined) {
 			options.xpPerLevel = 16;
 		}

@@ -1,6 +1,6 @@
 import { Feature, FeatureCompanion, FeatureRetainer } from '@/models/feature';
 import { Navigate, Route, Routes } from 'react-router';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Sourcebook, SourcebookElementKind } from '@/models/sourcebook';
 import { Spin, notification } from 'antd';
 import { useDataManager, useHeroes, useHomebrewSourcebooks, useOptions, useSession } from '@/contexts/data-context';
@@ -97,6 +97,7 @@ import { Terrain } from '@/models/terrain';
 import { TerrainModal } from '@/components/modals/terrain/terrain-modal';
 import { Title } from '@/models/title';
 import { TransferPage } from '@/components/pages/transfer/transfer-page';
+import { UserSession } from '@/components/app-gate/app-gate';
 import { Utils } from '@/utils/utils';
 import { WelcomePage } from '@/components/pages/welcome/welcome-page';
 import { useErrorListener } from '@/hooks/use-error-listener';
@@ -108,6 +109,7 @@ import './main.scss';
 interface Props {
 	connectionSettings: ConnectionSettings;
 	dataService: DataService;
+	userSession: UserSession;
 }
 
 export const Main = (props: Props) => {
@@ -213,6 +215,12 @@ export const Main = (props: Props) => {
 		setDrawer(null);
 		persistHero(hero).then(() => navigation.goToHeroEdit(hero.id, 'start'));
 	};
+
+	useEffect(() => {
+		const createCampaignCharacter = () => newHero('');
+		window.addEventListener('stravsteel:create-character', createCampaignCharacter);
+		return () => window.removeEventListener('stravsteel:create-character', createCampaignCharacter);
+	}, []);
 
 	const deleteHero = (hero: Hero) => {
 		const stayInFolder = heroes.some(h => h.id !== hero.id && h.folder === hero.folder);
@@ -1734,6 +1742,7 @@ export const Main = (props: Props) => {
 	// #endregion
 
 	const footerParams: FooterParams = {
+		accountName: props.userSession.username ?? props.userSession.displayName,
 		errorsExist: errors.length > 0,
 		showReference: () => onShowReference(null, RulesPage.Rules),
 		showAbout: showAbout,

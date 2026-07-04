@@ -6,15 +6,17 @@ import { requireUser } from './auth.js';
 import { createToken, hashToken } from './security.js';
 
 const campaignSchema = z.object({
-	name: z.string().trim().min(1).max(120)
+	name: z.string().trim().min(1).max(120),
+	description: z.string().trim().max(1000).optional().default('')
 });
 
 const invitationSchema = z.object({
 	email: z.string().email().optional(),
+	identifier: z.string().trim().min(3).max(254).optional(),
 	role: z.enum([ 'director', 'player' ]).default('player'),
 	mode: z.enum([ 'email', 'link' ])
-}).refine(value => value.mode !== 'email' || value.email, {
-	message: 'Email is required for an email invitation'
+}).refine(value => value.mode !== 'email' || value.email || value.identifier, {
+	message: 'A username or email is required'
 });
 
 const memberRoleSchema = z.object({
@@ -93,13 +95,44 @@ export const registerCampaigns = (
 		}
 	});
 
+	app.delete('/api/campaigns/:campaignId', async (request, reply) => {
+		const user = await requireUser(request, reply, database);
+		if (!user) {
+			return;
+		}
+		const { campaignId } = request.params as { campaignId: string };
+		const campaign = await database.query<{ created_by: string; is_personal: boolean }>(`
+			select created_by, is_personal from campaign where id = $1
+		`, [ campaignId ]);
+		if (!campaign.rows[0]) {
+			return reply.code(404).send({ error: 'Campaign not found' });
+		}
+		if (campaign.rows[0].created_by !== user.id && user.siteRole !== 'admin') {
+			return reply.code(403).send({ error: 'Only the campaign owner can delete this campaign.' });
+		}
+		if (campaign.rows[0].is_personal) {
+			return reply.code(409).send({ error: 'A personal character workspace cannot be deleted.' });
+		}
+		await database.query('delete from campaign where id = $1', [ campaignId ]);
+		return reply.code(204).send();
+	});
+
 	app.get('/api/campaigns', async (request, reply) => {
 		const user = await requireUser(request, reply, database);
 		if (!user) {
 			return;
 		}
 		const result = await database.query(`
-			select c.id, c.name, cm.role, c.created_at, c.updated_at
+			select
+				c.id,
+				c.name,
+				c.description,
+				c.is_personal as "isPersonal",
+				c.created_by as "ownerId",
+				(c.created_by = $1) as "isOwner",
+				cm.role,
+				c.created_at,
+				c.updated_at
 			from campaign c
 			join campaign_member cm on cm.campaign_id = c.id
 			where cm.user_id = $1
@@ -121,19 +154,22 @@ export const registerCampaigns = (
 		const client = await database.connect();
 		try {
 			await client.query('begin');
-			const campaign = await client.query<{ id: string; name: string }>(`
-				insert into campaign (name, created_by)
-				values ($1, $2)
-				returning id, name
-			`, [ parsed.data.name, user.id ]);
+			const campaign = await client.query<{ id: string; name: string; description: string }>(`
+				insert into campaign (name, description, created_by)
+				values ($1, $2, $3)
+				returning id, name, description
+			`, [ parsed.data.name, parsed.data.description, user.id ]);
 			await client.query(`
 				insert into campaign_member (campaign_id, user_id, role)
 				values ($1, $2, 'director')
 			`, [ campaign.rows[0].id, user.id ]);
 			await client.query('commit');
-			return reply.code(201).send({ ...campaign.rows[0], role: 'director' });
+			return reply.code(201).send({ ...campaign.rows[0], ownerId: user.id, isOwner: true, role: 'director' });
 		} catch (error) {
 			await client.query('rollback');
+			if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+				return reply.code(409).send({ error: 'A campaign with that name already exists.' });
+			}
 			throw error;
 		} finally {
 			client.release();
@@ -156,11 +192,14 @@ export const registerCampaigns = (
 			select
 				u.id,
 				u.email,
+				u.username,
 				u.display_name as "displayName",
 				u.avatar_url as "avatarUrl",
+				(c.created_by = u.id) as "isOwner",
 				cm.role
 			from campaign_member cm
 			join app_user u on u.id = cm.user_id
+			join campaign c on c.id = cm.campaign_id
 			where cm.campaign_id = $1
 			order by cm.role, lower(u.display_name)
 		`, [ campaignId ]);
@@ -179,6 +218,10 @@ export const registerCampaigns = (
 		const parsed = memberRoleSchema.safeParse(request.body);
 		if (!parsed.success) {
 			return reply.code(400).send({ error: parsed.error.flatten() });
+		}
+		const campaign = await database.query<{ created_by: string }>('select created_by from campaign where id = $1', [ campaignId ]);
+		if (campaign.rows[0]?.created_by === memberId && parsed.data.role !== 'director') {
+			return reply.code(409).send({ error: 'The campaign owner must remain a Director.' });
 		}
 		if (parsed.data.role === 'player' && await isLastDirector(campaignId, memberId)) {
 			return reply.code(409).send({ error: 'A campaign must retain at least one Director' });
@@ -201,6 +244,10 @@ export const registerCampaigns = (
 			return;
 		}
 		const { campaignId, memberId } = request.params as { campaignId: string; memberId: string };
+		const campaign = await database.query<{ created_by: string }>('select created_by from campaign where id = $1', [ campaignId ]);
+		if (campaign.rows[0]?.created_by === memberId) {
+			return reply.code(409).send({ error: 'The campaign owner cannot be removed.' });
+		}
 		if (!await canManageCampaign(campaignId, user.id, user.siteRole === 'admin')) {
 			return reply.code(403).send({ error: 'Director access required' });
 		}
@@ -242,12 +289,38 @@ export const registerCampaigns = (
 		if (!await canManageCampaign(campaignId, user.id, user.siteRole === 'admin')) {
 			return reply.code(403).send({ error: 'Director access required' });
 		}
+		const campaign = await database.query<{ is_personal: boolean }>(
+			'select is_personal from campaign where id = $1',
+			[ campaignId ]
+		);
+		if (campaign.rows[0]?.is_personal) {
+			return reply.code(409).send({ error: 'A personal workspace cannot have campaign invitations.' });
+		}
 
 		const parsed = invitationSchema.safeParse(request.body);
 		if (!parsed.success) {
 			return reply.code(400).send({ error: parsed.error.flatten() });
 		}
 		const token = parsed.data.mode === 'link' ? createToken() : undefined;
+		const identifier = parsed.data.identifier ?? parsed.data.email;
+		if (parsed.data.mode === 'email' && identifier) {
+			const existing = await database.query<{ id: string }>(`
+				select id from app_user
+				where lower(email) = lower($1) or lower(username) = lower($1)
+				limit 1
+			`, [ identifier ]);
+			if (existing.rows[0]) {
+				await database.query(`
+					insert into campaign_member (campaign_id, user_id, role)
+					values ($1, $2, $3)
+					on conflict (campaign_id, user_id) do update set role = excluded.role
+				`, [ campaignId, existing.rows[0].id, parsed.data.role ]);
+				return reply.code(201).send({ id: null, inviteUrl: null, joined: true });
+			}
+			if (!identifier.includes('@')) {
+				return reply.code(404).send({ error: 'No account has that username.' });
+			}
+		}
 		const result = await database.query<{ id: string }>(`
 			insert into invitation (
 				campaign_id, email, token_hash, role, created_by, expires_at
@@ -256,7 +329,7 @@ export const registerCampaigns = (
 			returning id
 		`, [
 			campaignId,
-			parsed.data.email ?? null,
+			identifier ?? null,
 			token ? hashToken(token) : null,
 			parsed.data.role,
 			user.id
@@ -265,6 +338,47 @@ export const registerCampaigns = (
 			id: result.rows[0].id,
 			inviteUrl: token ? `${config.WEB_ORIGIN}/?invite=${token}` : null
 		});
+	});
+
+	app.get('/api/characters/mine', async (request, reply) => {
+		const user = await requireUser(request, reply, database);
+		if (!user) {
+			return;
+		}
+		const result = await database.query(`
+			select
+				ch.id,
+				coalesce(ch.document->>'name', 'Unnamed Character') as name,
+				ch.campaign_id as "campaignId",
+				c.name as "campaignName"
+			from character ch
+			join campaign c on c.id = ch.campaign_id
+			where ch.owner_id = $1
+			order by lower(coalesce(ch.document->>'name', ''))
+		`, [ user.id ]);
+		return result.rows;
+	});
+
+	app.post('/api/campaigns/:campaignId/characters/:characterId', async (request, reply) => {
+		const user = await requireUser(request, reply, database);
+		if (!user) {
+			return;
+		}
+		const { campaignId, characterId } = request.params as { campaignId: string; characterId: string };
+		const membership = await database.query(`
+			select 1 from campaign_member where campaign_id = $1 and user_id = $2
+		`, [ campaignId, user.id ]);
+		if (!membership.rowCount) {
+			return reply.code(403).send({ error: 'Campaign access required' });
+		}
+		const result = await database.query(`
+			update character set campaign_id = $1, updated_at = now()
+			where id = $2 and owner_id = $3
+			returning id
+		`, [ campaignId, characterId, user.id ]);
+		return result.rowCount
+			? reply.code(204).send()
+			: reply.code(404).send({ error: 'Character not found or not owned by you' });
 	});
 
 	app.post('/api/admin/approvals', async (request, reply) => {

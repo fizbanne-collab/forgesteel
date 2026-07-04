@@ -1,20 +1,21 @@
-import { BookOutlined, DatabaseFilled, InfoCircleOutlined, PlayCircleOutlined, ReadOutlined, SettingOutlined, TeamOutlined, WarningFilled } from '@ant-design/icons';
-import { Button, Divider, Drawer, Flex, Space, Tag } from 'antd';
+import { BookOutlined, DatabaseFilled, DownOutlined, HomeOutlined, InfoCircleOutlined, PlayCircleOutlined, ReadOutlined, SettingOutlined, TeamOutlined, UserOutlined, WarningFilled } from '@ant-design/icons';
+import { Button, Divider, Drawer, Flex, Popover, Space, Tag } from 'antd';
 import { ButtonConfig, ButtonGroup } from '@/components/controls/button-group/button-group';
 import { useDataManager, useOptions } from '@/contexts/data-context';
+import { useEffect, useState } from 'react';
 import { ConnectionSettings } from '@/models/connection-settings';
 import { ErrorBoundary } from '@/components/controls/error-boundary/error-boundary';
 import { Modal } from '@/components/modals/modal/modal';
 import { Options } from '@/models/options';
 import { SyncStatus } from '@/components/panels/sync-status/sync-status';
-import shield from '@/assets/shield.png';
+import { createPortal } from 'react-dom';
 import { useIsSmall } from '@/hooks/use-is-small';
 import { useNavigation } from '@/hooks/use-navigation';
-import { useState } from 'react';
 
 import './app-footer.scss';
 
 export interface FooterParams {
+	accountName: string;
 	errorsExist: boolean;
 	showReference: () => void;
 	showAbout: () => void;
@@ -32,6 +33,8 @@ export const AppFooter = (props: Props) => {
 	const isSmall = useIsSmall();
 	const navigation = useNavigation();
 	const [ showSidebar, setShowSidebar ] = useState<boolean>(false);
+	const [ headerLeft, setHeaderLeft ] = useState<Element | null>(null);
+	const [ headerRight, setHeaderRight ] = useState<Element | null>(null);
 	const options = useOptions();
 	const dataManager = useDataManager();
 	const saveOptions = (options: Options) => {
@@ -47,63 +50,114 @@ export const AppFooter = (props: Props) => {
 		window.location.assign('https://www.google.com');
 	};
 
-	const actions: ButtonConfig[] = [
-		{ type: 'button', label: isSmall ? undefined : 'Reference', icon: <ReadOutlined />, tooltip: 'Reference', onClick: props.params.showReference },
-		{ type: 'button', label: isSmall ? undefined : 'Settings', icon: <SettingOutlined />, tooltip: 'Settings', onClick: props.params.showSettings },
-		{ type: 'button', label: isSmall ? undefined : 'About', icon: <InfoCircleOutlined />, tooltip: 'About', onClick: props.params.showAbout }
-	];
+	useEffect(() => {
+		setHeaderLeft(document.querySelector('.app-header .navigation-section'));
+		setHeaderRight(document.querySelector('.app-header .global-actions-section'));
+	}, []);
+
+	const actions: ButtonConfig[] = [];
 	if (props.params.errorsExist) {
 		actions.push({ type: 'button', icon: <WarningFilled className='danger' />, tooltip: 'Errors', onClick: props.params.showErrors });
 	}
 
+	const navigationButtons = props.page === 'player-view' ?
+		null
+		: (
+			<Flex className='navigation-buttons-panel' align='center' gap={2}>
+				<Button type='text' className={props.page === 'welcome' ? 'selected' : ''} icon={<HomeOutlined />} title='Home' aria-label='Home' onClick={() => navigation.goToWelcome()} />
+				<Divider orientation='vertical' />
+				<Popover
+					trigger='click'
+					content={
+						<Space orientation='vertical' className='app-menu-popover'>
+							<Button block={true} type='text' icon={<TeamOutlined />} onClick={() => navigation.goToHeroList()}>Heroes</Button>
+							<Button
+								block={true}
+								type='text'
+								icon={<PlayCircleOutlined />}
+								onClick={() => window.dispatchEvent(new Event('stravsteel:my-campaigns'))}
+							>
+								My Campaigns
+							</Button>
+						</Space>
+					}
+				>
+					<Button
+						type='text'
+						className={props.page === 'heroes' || props.page === 'session' ? 'selected' : ''}
+						icon={<PlayCircleOutlined />}
+					>
+						Play Drawsteel <DownOutlined />
+					</Button>
+				</Popover>
+				<Divider orientation='vertical' />
+				<Button type='text' className={props.page === 'library' ? 'selected' : ''} icon={<BookOutlined />} onClick={() => navigation.goToLibrary('ancestry')}>
+					Library
+				</Button>
+			</Flex>
+		);
+
+	const moreMenu = (
+		<Space orientation='vertical' className='app-menu-popover'>
+			<Button block={true} type='text' icon={<SettingOutlined />} onClick={props.params.showSettings}>Settings</Button>
+			<Button block={true} type='text' icon={<ReadOutlined />} onClick={props.params.showReference}>Reference</Button>
+			<Button block={true} type='text' icon={<InfoCircleOutlined />} onClick={props.params.showAbout}>About</Button>
+			<Divider size='small' />
+			<Button block={true} type='text' onClick={() => navigation.goToExport()}>Export Data</Button>
+			<Button block={true} type='text' onClick={() => navigation.goToClocktower()}>Clocktower</Button>
+		</Space>
+	);
+
+	const utilityButtons = (
+		<Space className='app-footer-actions'>
+			<SyncStatus />
+			{
+				options.showDataSource && props.params.connectionSettings.dataSource && !isSmall ?
+					<Tag
+						icon={<DatabaseFilled />}
+						variant='outlined'
+						color='blue'
+					>
+						{props.params.connectionSettings.dataSource}
+					</Tag>
+					: null
+			}
+			<ButtonGroup buttons={actions} />
+			<ButtonGroup
+				buttons={[
+					{
+						type: 'dropdown',
+						label: props.params.accountName,
+						icon: <UserOutlined />,
+						tooltip: props.params.accountName,
+						popover: moreMenu
+					}
+				]}
+			/>
+		</Space>
+	);
+
+	const bar = (
+		<div className='app-footer bottom'>
+			{navigationButtons ?? <div />}
+			{
+				!options.cookieConsent ?
+					<ButtonGroup
+						buttons={[
+							{ type: 'button', label: 'Cookies', onClick: () => setShowSidebar(true) }
+						]}
+					/>
+					: null
+			}
+			{utilityButtons}
+		</div>
+	);
+
 	return (
 		<ErrorBoundary>
-			<div className='app-footer'>
-				{
-					(props.page === 'player-view') ?
-						<div />
-						:
-						<Flex className='navigation-buttons-panel' align='center' gap={2}>
-							<Button type='text' className={props.page === 'welcome' ? 'selected' : ''} icon={<img className='logo-icon' src={shield} />} onClick={() => navigation.goToWelcome()} />
-							<Divider orientation='vertical' />
-							<Button type='text' className={props.page === 'heroes' ? 'selected' : ''} icon={<TeamOutlined />} onClick={() => navigation.goToHeroList()}>
-								{isSmall ? null : 'Heroes'}
-							</Button>
-							<Divider orientation='vertical' />
-							<Button type='text' className={props.page === 'library' ? 'selected' : ''} icon={<BookOutlined />} onClick={() => navigation.goToLibrary('ancestry')}>
-								{isSmall ? null : 'Library'}
-							</Button>
-							<Divider orientation='vertical' />
-							<Button type='text' className={props.page === 'session' ? 'selected' : ''} icon={<PlayCircleOutlined />} onClick={() => navigation.goToSession()}>
-								{isSmall ? null : 'Session'}
-							</Button>
-						</Flex>
-				}
-				{
-					!options.cookieConsent ?
-						<ButtonGroup
-							buttons={[
-								{ type: 'button', label: 'Cookies', onClick: () => setShowSidebar(true) }
-							]}
-						/>
-						: null
-				}
-				<Space>
-					<SyncStatus />
-					{
-						options.showDataSource && props.params.connectionSettings.dataSource && !isSmall ?
-							<Tag
-								icon={<DatabaseFilled />}
-								variant='outlined'
-								color='blue'
-							>
-								{props.params.connectionSettings.dataSource}
-							</Tag>
-							: null
-					}
-					<ButtonGroup buttons={actions} />
-				</Space>
-			</div>
+			{options.navigationBarAtBottom ? bar : null}
+			{!options.navigationBarAtBottom && headerLeft ? createPortal(navigationButtons, headerLeft) : null}
+			{!options.navigationBarAtBottom && headerRight ? createPortal(utilityButtons, headerRight) : null}
 			<Drawer open={showSidebar} onClose={() => setShowSidebar(false)} closeIcon={null} size={500}>
 				<Modal
 					content={

@@ -8,9 +8,8 @@
 		background-color: rgb(230, 230, 230);
 		padding: 50px;
 		display: flex;
-		flex-direction: row;
-		align-items: flex-start;
-		justify-content: space-evenly;
+		flex-direction: column;
+		align-items: center;
 		gap: 50px;
 		overflow-y: auto;
 
@@ -53,11 +52,12 @@
 			}
 		}
 
-		.tip-column {
-			flex: 0 0 400px;
+		.news-section {
+			width: 100%;
+			max-width: 1000px;
 			display: flex;
 			flex-direction: column;
-			gap: 30px;
+			gap: 15px;
 		}
 	}
 

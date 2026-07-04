@@ -13,7 +13,7 @@ export const LogoPanel = (props: Props) => {
 		<ErrorBoundary>
 			<div className='logo-panel'>
 				<img className='logo-panel-image' src={shield} />
-				<div className='logo-panel-text'>{props.text || 'Forge Steel'}</div>
+				<div className='logo-panel-text'>{props.text || 'DrawSteel'}</div>
 			</div>
 		</ErrorBoundary>
 	);

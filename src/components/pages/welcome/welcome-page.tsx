@@ -1,8 +1,8 @@
 import { AppFooter, FooterParams } from '@/components/panels/app-footer/app-footer';
-import { BookOutlined, BulbFilled, BulbOutlined, DoubleLeftOutlined, DoubleRightOutlined, EllipsisOutlined, PlayCircleOutlined, TeamOutlined } from '@ant-design/icons';
-import { Button, Divider, Flex, Popover, Segmented, Space } from 'antd';
-import { ButtonGroup, DropdownConfig } from '@/components/controls/button-group/button-group';
+import { BookOutlined, DoubleLeftOutlined, DoubleRightOutlined, PlayCircleOutlined, TeamOutlined } from '@ant-design/icons';
+import { Button, Flex, Popover, Segmented, Space } from 'antd';
 import { AppHeader } from '@/components/panels/app-header/app-header';
+import { ButtonGroup } from '@/components/controls/button-group/button-group';
 import { Collections } from '@/utils/collections';
 import { ErrorBoundary } from '@/components/controls/error-boundary/error-boundary';
 import { HeaderText } from '@/components/controls/header-text/header-text';
@@ -15,7 +15,6 @@ import { Sourcebook } from '@/models/sourcebook';
 import { Tip } from '@/models/tip';
 import { TipData } from '@/data/tip-data';
 import { TipPanel } from '@/components/panels/tip/tip-panel';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { useNavigation } from '@/hooks/use-navigation';
 import { useOptions } from '@/contexts/data-context';
 import { useState } from 'react';
@@ -33,74 +32,16 @@ interface Props {
 }
 
 export const WelcomePage = (props: Props) => {
-	const isSmall = useMediaQuery('(max-width: 1000px)');
 	const [ tips ] = useState<Tip[]>([
 		...Collections.shuffle(TipData.getTips().filter(t => t.isNew)),
 		...Collections.shuffle(TipData.getTips().filter(t => !t.isNew))
 	]);
-	const [ showTips, setShowTips ] = useState<boolean>(true);
 	const [ tipIndex, setTipIndex ] = useState<number>(0);
-	const navigation = useNavigation();
-
-	const menu: DropdownConfig = {
-		type: 'dropdown',
-		icon: <EllipsisOutlined />,
-		popover: (
-			<Space orientation='vertical'>
-				<Button block={true} type='text' onClick={() => navigation.goToHeroList()}>Heroes</Button>
-				<Button block={true} type='text' onClick={() => navigation.goToLibrary('ancestry')}>Library</Button>
-				<Button block={true} type='text' onClick={() => navigation.goToSession()}>Session</Button>
-				<Divider size='small' />
-				<Button block={true} type='text' onClick={() => navigation.goToExport()}>Export Data</Button>
-				<Button block={true} type='text' onClick={() => navigation.goToClocktower()}>Clocktower</Button>
-			</Space>
-		)
-	};
-
-	if (isSmall) {
-		return (
-			<ErrorBoundary name='welcome-page'>
-				<div className='welcome-page'>
-					<AppHeader>
-						<ButtonGroup buttons={[ menu ]} />
-					</AppHeader>
-					<ErrorBoundary>
-						<div className='welcome-page-content compact'>
-							<div className='welcome-column'>
-								<Welcome
-									sourcebooks={props.sourcebooks}
-									onNewHero={props.onNewHero}
-									onPregen={props.onPregen}
-									onNewEncounter={props.onNewEncounter}
-								/>
-							</div>
-						</div>
-					</ErrorBoundary>
-					<AppFooter
-						page='welcome'
-						params={props.params}
-					/>
-				</div>
-			</ErrorBoundary>
-		);
-	}
 
 	return (
 		<ErrorBoundary name='welcome-page'>
 			<div className='welcome-page'>
-				<AppHeader>
-					<ButtonGroup
-						buttons={[
-							{
-								type: 'button',
-								tooltip: 'Hide Tips',
-								icon: showTips ? <BulbFilled style={{ color: 'rgba(64, 150, 255)' }} /> : <BulbOutlined />,
-								onClick: () => setShowTips(!showTips)
-							},
-							menu
-						]}
-					/>
-				</AppHeader>
+				<AppHeader />
 				<div className='welcome-page-content'>
 					<div className='welcome-column'>
 						<Welcome
@@ -110,32 +51,32 @@ export const WelcomePage = (props: Props) => {
 							onNewEncounter={props.onNewEncounter}
 						/>
 					</div>
-					{
-						showTips ?
-							<div className='tip-column'>
-								<Flex justify='center'>
-									<ButtonGroup
-										buttons={[
-											{
-												type: 'button',
-												tooltip: 'Previous Tip',
-												icon: <DoubleLeftOutlined />,
-												disabled: tipIndex <= 0,
-												onClick: () => setTipIndex(tipIndex - 1)
-											},
-											{
-												type: 'button',
-												tooltip: 'Next Tip',
-												icon: <DoubleRightOutlined />,
-												onClick: () => setTipIndex(tipIndex + 1)
-											}
-										]}
-									/>
-								</Flex>
-								<TipPanel tip={tips[tipIndex % tips.length]} />
-							</div>
-							: null
-					}
+					<section className='news-section'>
+						<HeaderText
+							extra={
+								<ButtonGroup
+									buttons={[
+										{
+											type: 'button',
+											tooltip: 'Previous News Item',
+											icon: <DoubleLeftOutlined />,
+											disabled: tipIndex <= 0,
+											onClick: () => setTipIndex(tipIndex - 1)
+										},
+										{
+											type: 'button',
+											tooltip: 'Next News Item',
+											icon: <DoubleRightOutlined />,
+											onClick: () => setTipIndex(tipIndex + 1)
+										}
+									]}
+								/>
+							}
+						>
+							News
+						</HeaderText>
+						<TipPanel tip={tips[tipIndex % tips.length]} />
+					</section>
 				</div>
 				<AppFooter
 					page='welcome'

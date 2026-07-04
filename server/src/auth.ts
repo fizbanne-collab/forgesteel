@@ -4,6 +4,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { AppConfig } from './config.js';
 import { DatabasePool } from './db.js';
 import { createCodeChallenge, createToken, hashToken } from './security.js';
+import { z } from 'zod';
 
 const GOOGLE_AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -17,6 +18,8 @@ export interface AuthenticatedUser {
 	id: string;
 	email: string;
 	displayName: string;
+	username: string | null;
+	personalCampaignId: string;
 	avatarUrl: string | null;
 	siteRole: 'admin' | 'player';
 }
@@ -68,12 +71,22 @@ export const getSessionUser = async (
 		id: string;
 		email: string;
 		display_name: string;
+		username: string | null;
+		personal_campaign_id: string;
 		avatar_url: string | null;
 		site_role: 'admin' | 'player';
 	}>(`
-		select u.id, u.email, u.display_name, u.avatar_url, u.site_role
+		select
+			u.id,
+			u.email,
+			u.display_name,
+			u.username,
+			u.avatar_url,
+			u.site_role,
+			pc.id as personal_campaign_id
 		from auth_session s
 		join app_user u on u.id = s.user_id
+		join campaign pc on pc.created_by = u.id and pc.is_personal
 		where s.token_hash = $1 and s.expires_at > now()
 	`, [ hashToken(token.value) ]);
 
@@ -82,6 +95,8 @@ export const getSessionUser = async (
 		id: user.id,
 		email: user.email,
 		displayName: user.display_name,
+		username: user.username,
+		personalCampaignId: user.personal_campaign_id,
 		avatarUrl: user.avatar_url,
 		siteRole: user.site_role
 	} : null;
@@ -187,6 +202,18 @@ const admitGoogleUser = async (
 				`, [ invitation.campaign_id, userId, invitation.role ]);
 			}
 		}
+
+		await client.query(`
+			with personal_campaign as (
+				insert into campaign (name, description, created_by, is_personal)
+				values ('__personal__' || $1::text, 'Private character workspace', $1, true)
+				on conflict (created_by) where is_personal do nothing
+				returning id
+			)
+			insert into campaign_member (campaign_id, user_id, role)
+			select id, $1, 'director' from personal_campaign
+			on conflict (campaign_id, user_id) do nothing
+		`, [ userId ]);
 
 		await client.query('commit');
 		return userId;
@@ -304,6 +331,32 @@ export const registerAuth = async (
 	app.get('/api/auth/session', async (request, reply) => {
 		const user = await getSessionUser(request, database);
 		return user ?? reply.code(401).send({ error: 'Authentication required' });
+	});
+
+	app.patch('/api/auth/profile', async (request, reply) => {
+		const user = await requireUser(request, reply, database);
+		if (!user) {
+			return;
+		}
+		const parsed = z.object({
+			username: z.string().trim().regex(/^[A-Za-z0-9_]{3,24}$/)
+		}).safeParse(request.body);
+		if (!parsed.success) {
+			return reply.code(400).send({ error: 'Username must be 3-24 characters using letters, numbers, or underscores.' });
+		}
+		try {
+			const result = await database.query<{ username: string }>(`
+				update app_user set username = $2, updated_at = now()
+				where id = $1
+				returning username
+			`, [ user.id, parsed.data.username ]);
+			return result.rows[0];
+		} catch (error) {
+			if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+				return reply.code(409).send({ error: 'That username is already in use.' });
+			}
+			throw error;
+		}
 	});
 
 	app.post('/api/auth/logout', async (request, reply) => {

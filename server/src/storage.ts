@@ -443,7 +443,7 @@ export const registerStorage = (
 			return;
 		}
 		const [ campaign, characters, documents ] = await Promise.all([
-			database.query('select id, name, created_at, updated_at from campaign where id = $1', [ access.campaignId ]),
+			database.query('select id, name, description, created_at, updated_at from campaign where id = $1', [ access.campaignId ]),
 			database.query('select document from character where campaign_id = $1 order by created_at', [ access.campaignId ]),
 			database.query(`
 				select document_type, document_key, document
