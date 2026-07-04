@@ -298,7 +298,7 @@ You can shift into squares that contain one of your minions, even if they occupy
 							feature: FactoryLogic.feature.createAbility({
 								ability: FactoryLogic.createAbility({
 									id: 'summoner-1-8b',
-									name: 'Impede!',
+									name: 'Halt!',
 									description: 'You order a minion to get in the way.',
 									type: FactoryLogic.type.createTrigger('The target starts their turn, moves, or is force moved.'),
 									distance: [ FactoryLogic.distance.createSummoner() ],
