@@ -1,5 +1,6 @@
 import { Button, Drawer, Flex, Segmented, Select, Space } from 'antd';
 import { FlagFilled, FlagOutlined, MoonOutlined, SettingOutlined, SunOutlined, TeamOutlined } from '@ant-design/icons';
+import { Options, VisualTheme } from '@/models/options';
 import { useDataManager, useHeroes, useOptions } from '@/contexts/data-context';
 import { AbilityData } from '@/data/ability-data';
 import { Collections } from '@/utils/collections';
@@ -13,7 +14,6 @@ import { HeaderText } from '@/components/controls/header-text/header-text';
 import { LabelControl } from '@/components/controls/label-control/label-control';
 import { Modal } from '@/components/modals/modal/modal';
 import { NumberSpin } from '@/components/controls/number-spin/number-spin';
-import { Options } from '@/models/options';
 import { PanelWidth } from '@/enums/panel-width';
 import { SheetPageSize } from '@/enums/sheet-page-size';
 import { StandardAbilitySelectModal } from '@/components/modals/select/standard-ability-select/standard-ability-select-modal';
@@ -68,6 +68,14 @@ export const SettingsModal = (props: Props) => {
 			saveOptions(copy);
 		};
 
+		const setVisualTheme = (value: VisualTheme) => {
+			const copy = Utils.copy(options);
+			copy.visualTheme = value;
+			setOptions(copy);
+			saveOptions(copy);
+			document.documentElement.setAttribute('data-visual-theme', value);
+		};
+
 		return (
 			<Expander title='Appearance'>
 				<Space orientation='vertical' style={{ width: '100%' }}>
@@ -80,6 +88,21 @@ export const SettingsModal = (props: Props) => {
 							{ label: 'System', value: 'system', icon: <SettingOutlined /> },
 							{ label: 'Dark Mode', value: 'dark', icon: <MoonOutlined /> }
 						]}
+					/>
+					<LabelControl
+						label='Visual style'
+						control={
+							<Segmented
+								block={true}
+								value={options.visualTheme}
+								onChange={setVisualTheme}
+								options={[
+									{ label: 'Arcane', value: 'arcane-command' },
+									{ label: 'War Table', value: 'war-table' },
+									{ label: 'Ember', value: 'ember-citadel' }
+								]}
+							/>
+						}
 					/>
 					<Toggle
 						label='Navigation bar at bottom'

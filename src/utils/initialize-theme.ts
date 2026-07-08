@@ -1,4 +1,6 @@
 export const initializeTheme = () => {
+	document.documentElement.setAttribute('data-visual-theme', 'arcane-command');
+
 	const setTheme = (theme: 'dark' | 'light') => {
 		document.documentElement.setAttribute('data-theme', theme);
 		document.documentElement.style.colorScheme = theme;

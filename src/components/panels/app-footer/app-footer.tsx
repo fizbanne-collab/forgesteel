@@ -70,7 +70,7 @@ export const AppFooter = (props: Props) => {
 					trigger='click'
 					content={
 						<Space orientation='vertical' className='app-menu-popover'>
-							<Button block={true} type='text' icon={<TeamOutlined />} onClick={() => navigation.goToHeroList()}>Heroes</Button>
+							<Button block={true} type='text' icon={<TeamOutlined />} onClick={() => navigation.goToHeroList()}>My Heroes</Button>
 							<Button
 								block={true}
 								type='text'
@@ -84,16 +84,34 @@ export const AppFooter = (props: Props) => {
 				>
 					<Button
 						type='text'
-						className={props.page === 'heroes' || props.page === 'session' ? 'selected' : ''}
+						className={props.page === 'heroes' ? 'selected' : ''}
 						icon={<PlayCircleOutlined />}
 					>
 						Play Drawsteel <DownOutlined />
 					</Button>
 				</Popover>
 				<Divider orientation='vertical' />
-				<Button type='text' className={props.page === 'library' ? 'selected' : ''} icon={<BookOutlined />} onClick={() => navigation.goToLibrary('ancestry')}>
-					Library
-				</Button>
+				<Popover
+					trigger='click'
+					content={
+						<Space orientation='vertical' className='app-menu-popover'>
+							<Button block={true} type='text' icon={<BookOutlined />} onClick={() => navigation.goToLibrary('ancestry')}>Library</Button>
+							<Button block={true} type='text' icon={<PlayCircleOutlined />} onClick={() => navigation.goToSession()}>Sessions</Button>
+							<Button block={true} type='text' onClick={() => navigation.goToLibrary('encounter')}>Encounters</Button>
+							<Button block={true} type='text' onClick={() => navigation.goToLibrary('montage')}>Montage</Button>
+							<Button block={true} type='text' onClick={() => navigation.goToLibrary('negotiation')}>Negotiations</Button>
+							<Button block={true} type='text' onClick={() => navigation.goToLibrary('tactical-map')}>Maps</Button>
+						</Space>
+					}
+				>
+					<Button
+						type='text'
+						className={props.page === 'library' || props.page === 'session' ? 'selected' : ''}
+						icon={<BookOutlined />}
+					>
+						Direct Drawsteel <DownOutlined />
+					</Button>
+				</Popover>
 			</Flex>
 		);
 

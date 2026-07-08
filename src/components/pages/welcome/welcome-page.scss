@@ -2,16 +2,32 @@
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	background: var(--app-gradient, transparent);
 
 	.welcome-page-content {
 		height: 100%;
-		background-color: rgb(230, 230, 230);
+		background:
+			linear-gradient(rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+			var(--app-gradient, rgb(230, 230, 230));
 		padding: 50px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 50px;
 		overflow-y: auto;
+		position: relative;
+
+		&::before {
+			content: "";
+			position: fixed;
+			inset: 74px 0 0;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+			background-size: 48px 48px;
+			mask-image: linear-gradient(to bottom, black, transparent 76%);
+		}
 
 		&.compact {
 			padding: 20px;
@@ -19,7 +35,10 @@
 
 		.welcome-column {
 			flex: 1 1 0;
-			max-width: 1000px;
+			width: 100%;
+			max-width: 1180px;
+			position: relative;
+			z-index: 1;
 
 			.welcome-tab-button {
 				height: 45px;
@@ -43,6 +62,13 @@
 				display: flex;
 				flex-direction: column;
 				gap: 20px;
+
+				h1,
+				h2,
+				h3 {
+					letter-spacing: -0.035em;
+					text-transform: none;
+				}
 			}
 
 			.welcome-buttons {
@@ -54,10 +80,20 @@
 
 		.news-section {
 			width: 100%;
-			max-width: 1000px;
+			max-width: 1180px;
 			display: flex;
 			flex-direction: column;
 			gap: 15px;
+			position: relative;
+			z-index: 1;
+
+			.ant-card,
+			.tip-panel,
+			.selectable-panel {
+				border-color: var(--app-border, transparent);
+				background: linear-gradient(135deg, var(--app-panel, transparent), var(--app-panel-soft, transparent));
+				box-shadow: var(--app-card-shadow, none);
+			}
 		}
 	}
 
@@ -73,7 +109,7 @@
 html[data-theme="dark"] {
 	.welcome-page {
 		.welcome-page-content {
-			background-color: rgb(55, 55, 55);
+			background: var(--app-gradient, rgb(55, 55, 55));
 
 			.welcome-column {
 				.logo-container {
@@ -81,6 +117,45 @@ html[data-theme="dark"] {
 						filter: invert(1);
 					}
 				}
+			}
+		}
+	}
+}
+
+html[data-visual-theme] {
+	.welcome-page {
+		.ant-segmented {
+			margin: 22px 0 !important;
+		}
+
+		.welcome-column {
+			> div {
+				> .ds-text.centered-text {
+					margin: 0 0 16px;
+					color: var(--app-text-muted);
+					font-size: 16px;
+					letter-spacing: 0.03em;
+				}
+			}
+		}
+
+		.welcome-section {
+			> div:first-child {
+				> .ds-text:first-of-type {
+					font-size: 18px;
+				}
+			}
+
+			ul {
+				display: grid;
+				gap: 8px;
+				padding-left: 20px;
+			}
+		}
+
+		.news-section {
+			> .header-text {
+				color: var(--app-text);
 			}
 		}
 	}

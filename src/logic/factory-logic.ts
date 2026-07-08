@@ -1045,6 +1045,7 @@ export class FactoryLogic {
 			cookieConsent: false,
 			showDataSource: false,
 			navigationBarAtBottom: false,
+			visualTheme: 'arcane-command',
 			// Hero
 			shownStandardAbilities: [],
 			xpPerLevel: 16,

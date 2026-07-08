@@ -1,27 +1,47 @@
 .app-header {
-	flex: 0 0 50px;
-	padding: 0 12px;
-	background-color: rgb(200, 200, 200);
+	flex: 0 0 74px;
+	padding: 10px 20px;
+	background:
+		linear-gradient(135deg, var(--app-panel-strong, rgb(200, 200, 200)), var(--app-panel-soft, rgb(200, 200, 200)));
+	border-bottom: 1px solid var(--app-border, transparent);
+	box-shadow: 0 14px 34px rgba(0, 0, 0, 0.20);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 15px;
+	backdrop-filter: blur(18px);
 
 	.left-section {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		gap: 18px;
 	}
 
 	.right-section {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		gap: 12px;
 	}
 }
 
 html[data-theme="dark"] {
 	.app-header {
-		background-color: rgb(0, 0, 0);
+		background:
+			linear-gradient(135deg, var(--app-panel-strong, rgb(0, 0, 0)), var(--app-panel-soft, rgb(0, 0, 0)));
+	}
+}
+
+@media only screen and (max-width: 900px) {
+	.app-header {
+		flex: 0 0 auto;
+		padding: 10px;
+		flex-wrap: wrap;
+
+		.left-section,
+		.right-section {
+			width: 100%;
+			justify-content: space-between;
+			flex-wrap: wrap;
+		}
 	}
 }

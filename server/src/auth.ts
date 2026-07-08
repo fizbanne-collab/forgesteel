@@ -1,9 +1,9 @@
-import cookie from '@fastify/cookie';
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { AppConfig } from './config.js';
-import { DatabasePool } from './db.js';
 import { createCodeChallenge, createToken, hashToken } from './security.js';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { AppConfig } from './config.js';
+import cookie from '@fastify/cookie';
+import { DatabasePool } from './db.js';
 import { z } from 'zod';
 
 const GOOGLE_AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -91,15 +91,17 @@ export const getSessionUser = async (
 	`, [ hashToken(token.value) ]);
 
 	const user = result.rows[0];
-	return user ? {
-		id: user.id,
-		email: user.email,
-		displayName: user.display_name,
-		username: user.username,
-		personalCampaignId: user.personal_campaign_id,
-		avatarUrl: user.avatar_url,
-		siteRole: user.site_role
-	} : null;
+	return user
+		? {
+			id: user.id,
+			email: user.email,
+			displayName: user.display_name,
+			username: user.username,
+			personalCampaignId: user.personal_campaign_id,
+			avatarUrl: user.avatar_url,
+			siteRole: user.site_role
+		}
+		: null;
 };
 
 export const requireUser = async (
@@ -206,12 +208,12 @@ const admitGoogleUser = async (
 		await client.query(`
 			with personal_campaign as (
 				insert into campaign (name, description, created_by, is_personal)
-				values ('__personal__' || $1::text, 'Private character workspace', $1, true)
+				values ('__personal__' || $1::text, 'Private character workspace', $1::uuid, true)
 				on conflict (created_by) where is_personal do nothing
 				returning id
 			)
 			insert into campaign_member (campaign_id, user_id, role)
-			select id, $1, 'director' from personal_campaign
+			select id, $1::uuid, 'director' from personal_campaign
 			on conflict (campaign_id, user_id) do nothing
 		`, [ userId ]);
 

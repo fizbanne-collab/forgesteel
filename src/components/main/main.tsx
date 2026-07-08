@@ -132,6 +132,10 @@ export const Main = (props: Props) => {
 
 	useErrorListener(event => setErrors([ ...errors, event ]));
 
+	useEffect(() => {
+		document.documentElement.setAttribute('data-visual-theme', options.visualTheme);
+	}, [ options.visualTheme ]);
+
 	// #region Persistence
 
 	const persistHero = (hero: Hero) => {

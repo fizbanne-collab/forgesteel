@@ -27,6 +27,15 @@ interface Props {
 
 type GateState = 'loading' | 'signed-out' | 'profile' | 'campaigns' | 'error';
 
+class ApiError extends Error {
+	constructor(
+		readonly status: number,
+		message: string
+	) {
+		super(message);
+	}
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(url, {
 		credentials: 'include',
@@ -38,7 +47,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	});
 	if (!response.ok) {
 		const body = await response.json().catch(() => null) as { error?: string } | null;
-		throw new Error(body?.error ?? `${response.status} ${response.statusText}`);
+		throw new ApiError(response.status, body?.error ?? `${response.status} ${response.statusText}`);
 	}
 	return response.status === 204 ? undefined as T : response.json() as Promise<T>;
 }
@@ -78,7 +87,7 @@ export const AppGate = ({ onReady }: Props) => {
 				}
 			})
 			.catch(reason => {
-				if (reason instanceof Error && reason.message.startsWith('401')) {
+				if (reason instanceof ApiError && reason.status === 401) {
 					setState('signed-out');
 				} else {
 					setError(reason instanceof Error ? reason.message : 'Unable to connect to StravSteel.');

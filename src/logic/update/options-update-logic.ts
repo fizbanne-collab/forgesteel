@@ -16,6 +16,10 @@ export class OptionsUpdateLogic {
 			options.navigationBarAtBottom = false;
 		}
 
+		if (options.visualTheme === undefined) {
+			options.visualTheme = 'arcane-command';
+		}
+
 		if (options.xpPerLevel === undefined) {
 			options.xpPerLevel = 16;
 		}

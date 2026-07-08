@@ -1,25 +1,29 @@
 .selectable-panel {
 	position: relative;
 	width: 100%;
-	border: 1px solid transparent;
-	background: linear-gradient(rgb(255, 255, 255), rgb(250, 250, 250));
-	border-radius: 10px;
-	padding: 5px 20px 20px 20px;
+	border: 1px solid var(--app-border, transparent);
+	background:
+		linear-gradient(135deg, var(--app-panel, rgb(255, 255, 255)), var(--app-panel-soft, rgb(250, 250, 250)));
+	border-radius: var(--app-radius-lg, 10px);
+	padding: 22px 26px 26px;
 	display: flex;
 	flex-direction: column;
-	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.12);
+	box-shadow: var(--app-card-shadow, 0 1px 1px 0 rgba(0, 0, 0, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.12));
+	color: var(--app-text, inherit);
+	backdrop-filter: blur(14px);
 
 	&.selectable {
 		cursor: pointer;
 
 		&:hover {
-			background: rgb(230, 244, 255);
+			border-color: var(--app-border-strong, rgb(64, 150, 255));
+			background: linear-gradient(135deg, var(--app-panel-strong, rgb(230, 244, 255)), var(--app-panel, rgb(230, 244, 255)));
 		}
 	}
 
 	&.selected {
-		border-color: rgb(22, 119, 255);
-		background: rgb(230, 244, 255);
+		border-color: var(--app-border-strong, rgb(22, 119, 255));
+		background: linear-gradient(135deg, var(--app-panel-strong, rgb(230, 244, 255)), var(--app-panel, rgb(230, 244, 255)));
 	}
 
 	&.disabled {
@@ -46,12 +50,13 @@
 
 html[data-theme="dark"] {
 	.selectable-panel {
-		border: 1px solid rgba(250, 250, 250, 0.6);
-		background: linear-gradient(rgb(25, 25, 25), rgb(0, 0, 0));
+		border: 1px solid var(--app-border, rgba(250, 250, 250, 0.6));
+		background:
+			linear-gradient(135deg, var(--app-panel, rgb(25, 25, 25)), var(--app-panel-soft, rgb(0, 0, 0)));
 	
 		&.selectable:hover,
 		&.selected {
-			background: rgb(80, 80, 80);
+			background: linear-gradient(135deg, var(--app-panel-strong, rgb(80, 80, 80)), var(--app-panel, rgb(80, 80, 80)));
 		}
 	}
 }

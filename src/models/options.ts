@@ -1,11 +1,14 @@
 import { PanelWidth } from '@/enums/panel-width';
 import { SheetPageSize } from '@/enums/sheet-page-size';
 
+export type VisualTheme = 'arcane-command' | 'war-table' | 'ember-citadel';
+
 export interface Options {
 	// App
 	cookieConsent: boolean;
 	showDataSource: boolean;
 	navigationBarAtBottom: boolean;
+	visualTheme: VisualTheme;
 	// Hero
 	shownStandardAbilities: string[];
 	xpPerLevel: number;

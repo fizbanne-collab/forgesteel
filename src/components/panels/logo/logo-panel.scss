@@ -2,24 +2,188 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 10px;
+	gap: 12px;
+	color: var(--app-text, inherit);
 
-	.logo-panel-image {
-		height: 20px;
+	.logo-panel-mark {
+		width: 52px;
+		height: 52px;
+		flex: 0 0 52px;
+		overflow: visible;
+		border-radius: 16px;
+		background:
+			radial-gradient(circle at 50% 48%, rgba(104, 232, 255, 0.2), transparent 42%),
+			linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02));
+		box-shadow: 0 0 28px rgba(104, 232, 255, 0.18), inset 0 0 0 1px var(--app-border, rgba(255, 255, 255, 0.14));
+	}
+
+	.logo-panel-shield {
+		fill: rgba(9, 14, 27, 0.72);
+		stroke: url("#drawsteel-mark-steel");
+		stroke-width: 3;
+	}
+
+	.logo-panel-shield-inner {
+		fill: rgba(104, 232, 255, 0.08);
+		stroke: var(--app-border, rgba(104, 232, 255, 0.34));
+		stroke-width: 1.5;
+	}
+
+	.logo-panel-compass {
+		fill: url("#drawsteel-mark-steel");
+		opacity: 0.76;
+	}
+
+	.logo-panel-sword,
+	.logo-panel-die {
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	.logo-panel-sword {
+		animation: drawsteel-sword-cycle 20s cubic-bezier(0.22, 0.86, 0.32, 1) infinite;
+	}
+
+	.logo-panel-sword-blade,
+	.logo-panel-sword-guard,
+	.logo-panel-sword-pommel {
+		fill: url("#drawsteel-mark-steel");
+		stroke: rgba(255, 255, 255, 0.55);
+		stroke-width: 0.8;
+	}
+
+	.logo-panel-sword-core {
+		fill: url("#drawsteel-mark-arcane");
+		opacity: 0.9;
+	}
+
+	.logo-panel-die {
+		opacity: 0;
+		animation: drawsteel-die-cycle 20s cubic-bezier(0.19, 1, 0.22, 1) infinite;
+	}
+
+	.logo-panel-die-face {
+		fill: rgba(8, 18, 30, 0.92);
+		stroke: url("#drawsteel-mark-arcane");
+		stroke-width: 3;
+	}
+
+	.logo-panel-die-line {
+		fill: none;
+		stroke: rgba(210, 247, 255, 0.52);
+		stroke-width: 1.4;
+	}
+
+	.logo-panel-die text {
+		fill: var(--app-text, #fff);
+		font-size: 18px;
+		font-weight: 900;
+		letter-spacing: -1px;
+		font-family: Georgia, 'Times New Roman', serif !important;
 	}
 
 	.logo-panel-text {
-		font-size: 24px;
-		font-weight: 600;
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		font-family: Georgia, 'Times New Roman', serif !important;
+		font-size: 21px;
+		font-weight: 900;
+		line-height: 0.82;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		letter-spacing: 2px;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 18px rgba(104, 232, 255, 0.18);
+
+		span {
+			font-family: inherit !important;
+		}
+
+		span:first-child {
+			color: var(--app-text, #f7efe2);
+		}
+
+		span:last-child {
+			background: linear-gradient(180deg, #fff, var(--app-accent, #68e8ff) 48%, #7991a8);
+			background-clip: text;
+			color: transparent;
+		}
+	}
+}
+
+@keyframes drawsteel-sword-cycle {
+	0%,
+	8% {
+		opacity: 1;
+		transform: translateY(0) rotate(0deg) scale(1);
+	}
+
+	17% {
+		opacity: 1;
+		transform: translateY(-30px) rotate(-8deg) scale(0.94);
+	}
+
+	23%,
+	88% {
+		opacity: 0;
+		transform: translateY(-46px) rotate(-14deg) scale(0.82);
+	}
+
+	92% {
+		opacity: 0;
+		transform: translateY(18px) rotate(4deg) scale(0.9);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0) rotate(0deg) scale(1);
+	}
+}
+
+@keyframes drawsteel-die-cycle {
+	0%,
+	10% {
+		opacity: 0;
+		transform: translate(-44px, 24px) rotate(-160deg) scale(0.58);
+	}
+
+	22% {
+		opacity: 1;
+		transform: translate(0, 0) rotate(0deg) scale(1);
+	}
+
+	84% {
+		opacity: 1;
+		transform: translate(0, 0) rotate(0deg) scale(1);
+	}
+
+	90%,
+	100% {
+		opacity: 0;
+		transform: translate(20px, 6px) rotate(42deg) scale(0.72);
 	}
 }
 
 html[data-theme="dark"] {
 	.logo-panel {
-		.logo-panel-image {
-			filter: invert(1);
-		}		
+		.logo-panel-mark {
+			filter: none;
+		}
 	}	
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.logo-panel {
+		.logo-panel-sword,
+		.logo-panel-die {
+			animation: none;
+		}
+
+		.logo-panel-sword {
+			opacity: 0;
+		}
+
+		.logo-panel-die {
+			opacity: 1;
+		}
+	}
 }
